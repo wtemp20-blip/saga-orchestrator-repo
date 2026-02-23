@@ -44,6 +44,7 @@ jobs:
           key: ${{ secrets.PROD_SSH_KEY }}      # 접속용 비밀키 (Secrets 등록)
           source: "deploy/*"
           target: "/home/${{ secrets.PROD_USER }}"
+          overwrite: true
 
       #--------------------------------------------------------------------------
       # 운영 서버에서 docker login 및 compose 파일 이용하여 서버 가동
