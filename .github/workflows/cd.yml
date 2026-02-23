@@ -37,5 +37,20 @@ jobs:
       - name: Upload deploy files to 우리 구글 운영서버
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host:
-      
+          host: ${{ secrets.PROD_HOST }} # 접속할 서버의 IP주소 (사전에 secrets 변수로 등록해 놓은거)
+          user: ${{ secrets.PROD_USER }} # 사전에 secrets 변수로 등록한 로그인 아이디
+          key: ${{ secrets.PROD_SSH_KEY }} # 사전에 secrets 변수로 등록한 접속용 비밀키
+          script:
+            set -e  # 명령어 실행 중 하나라도 에러가 나면 배포를 즉시 중단하라 
+            
+            echo "== docker login ghcr.io =="  # 배포과정을 개발자에게 보여주려고... 
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+
+            echo "== cd deploy dir =="
+            CD /home/${{ secrets.PROD_USER }}/deploy  
+
+            echo "== ls (check uploaded files) =="
+            ls -al
+          
+            echo "== compose config check =="
+            docker compose --env-file env.prod -f docker-compose.prod.yml up -d  
