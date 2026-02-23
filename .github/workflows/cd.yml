@@ -40,7 +40,7 @@ jobs:
         # 보안처리된 방법으로 깃허브 → 운영서버로 파일 복사
         with:
           host: ${{ secrets.PROD_HOST }}        # 접속할 서버 IP (GitHub Secrets 등록)
-          user: ${{ secrets.PROD_USER }}        # 로그인 아이디 (Secrets 등록)
+          username: ${{ secrets.PROD_USER }}        # 로그인 아이디 (Secrets 등록)
           key: ${{ secrets.PROD_SSH_KEY }}      # 접속용 비밀키 (Secrets 등록)
           source: "deploy/*"
           target: "/home/${{ secrets.PROD_USER }}"
