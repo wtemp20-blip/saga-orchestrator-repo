@@ -21,12 +21,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Make env.prod from inputs
-        run: |
-          cat > deploy/env.prod << 'EOF'
+      - name: Make env.prod from inputs 환경 설정 파일 생성
+            # 이 경로로 파일을 만들거야,  deploy/env.prod 경로에 파일을 생성, EOF라는 문자가 나올때까지.. 모든 내용을 파일에 넣겠다
+            # CONFIG_TAG= ${{ inputs.config_tag }} 사용자가 워크플로우를 실행할때 입력한 태그 값을 파일에 기록
+        run: |   # 여러 줄의 쉘 명령어을 실행하겠다
+          cat > deploy/env.prod << 'EOF'  
           CONFIG_TAG= ${{ inputs.config_tag }}
           EOF
           echo "---- deploy/env.prod ----"
           cat deploy/env.prod
-  
+          
+      #--------------------------------------------------------------------------    
+      # 운영 서버에 DEPLY 폴더 업로그
+      #--------------------------------------------------------------------------    
+      - name: Upload deploy files to 우리 구글 운영서버
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:
       
