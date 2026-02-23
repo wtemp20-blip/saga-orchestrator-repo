@@ -1,1 +1,32 @@
 
+name: saga CD
+
+on: 
+  workflow_dispatch:
+    inputs:
+    
+      config_tag:
+        description: "Config 이미지 태그(SHA)"
+        required: true
+        default: "0effd827a88c60ca9c73301d425244ccfa499b58"
+
+permissions: 
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make env.prod from inputs
+        run: |
+          cat > deploy/env.prod << 'EOF'
+          CONFIG_TAG= ${{ inputs.config_tag }}
+          EOF
+          echo "---- deploy/env.prod ----"
+          cat deploy/env.prod
+  
+      
