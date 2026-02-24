@@ -101,7 +101,8 @@ services:
       - JAVA_TOOL_OPTIONS=-Xms64m -Xmx160m -XX:MaxMetaspaceSize=80m -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=16m -Xss384k
 
     depends_on:
-      - config-server
+      config-server:
+        condition: service_started
 
     networks: [ saga-net ]
 
@@ -136,8 +137,10 @@ services:
       - JAVA_TOOL_OPTIONS=-Xms128m -Xmx256m -XX:MaxMetaspaceSize=96m -XX:ReservedCodeCacheSize=80m -XX:MaxDirectMemorySize=32m -Xss512k
 
     depends_on:
-      - config-server
-      - eureka-server
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_started
 
     networks: [ saga-net ]
 
@@ -145,7 +148,47 @@ services:
   #------------------------------------
   # member-service
   #------------------------------------
-  # (추가 예정)
+  member-service: # 도커 내부 네트워크 상에서 ip대신 다른 도커와 통신할때 사용할 DNS 명
+    image: ghcr.io/devlearncampus/saga-member:${MEMBER_TAG} #현재 깃헙의 환경변수 중 MEMBER_TAG값 가져오기
+    container_name: member-service
+    ports:
+      - "9993:9993"
+    restart: always
+
+    mem_limit: 768m
+
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_APPLICATION_NAME=saga-member-service # UNKNOWN 등록 방지(선택이지만 강력 권장)
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8881
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - PORT=9993 #지정하지 않으면 8080 으로 돌아감..
+      - SERVER_PORT=9993
+
+      # 데이터베이스 접속 정보
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=liveshop
+      - DB_PASS=1234
+      
+      #메모리 안정화를 위한 설정(계산에 의함)
+      # "BPL*" 은 paketo 가 JAVA_TOOL_OPTIONS 를 계산할때 참고하는 값
+      - BPL_JVM_THREAD_COUNT=75
+      - BPL_JVM_STACK_SIZE=512k
+      - BPL_JVM_RESERVED_CODE_CACHE_SIZE=96M
+      - BPL_JVM_MAX_METASPACE_SIZE=160M
+
+      - JAVA_TOOL_OPTIONS=-Xms256m -Xmx384m -XX:MaxMetaspaceSize=160m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xss512k
+
+    depends_on:
+      config-server:
+        condition: service_started
+      eureka-server:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+
+    networks: [ saga-net ]
 
 
 #------------------------------------
