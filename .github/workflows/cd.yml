@@ -6,7 +6,7 @@ on:
       config_tag:
         description: "Config 이미지 태그(SHA)"
         required: true
-        default: "0effd827a88c60ca9c73301d425244ccfa499b58"
+        default: "9bd0fdff48ad3da63cab00af1c5588a937b20276"
 
 permissions:
   contents: read
