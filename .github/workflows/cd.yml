@@ -16,6 +16,12 @@ on:
         required: true
         default: "da7ad03ee8a9f4fe4cd36af1a75e00003e0cc392"         
         
+      # gateway-server 도커 이미지 정보
+      gateway_tag:
+        description: "GateWay 이미지 태그(SHA)"
+        required: true
+        default: "@@@@ 못함 아직"            
+        
 
 permissions:
   contents: read
