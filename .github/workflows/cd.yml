@@ -8,13 +8,19 @@ on:
       config_tag:
         description: "Config 이미지 태그(SHA)"
         required: true
-        default: "1de76766d01494710bc17d1e0384829647ef5b3d" # 유저 배려하기 위해 디폴트 값으로 태그 넣어둠
+        default: "5f07871ed724b69b239e4e9a550730a4a231f5e7" # 유저 배려하기 위해 디폴트 값으로 태그 넣어둠
 
       #eureka-server 도커 이미지 정보
       eureka_tag:
         description: "Eureka 이미지 태그(SHA)"
         required: true
-        default: "e04ee8b6569c66d02ee1eacda19be033fb176ec0" # 유저 배려하기 위해 디폴트 값으로 태그 넣어둠
+        default: "a09a98dcfbe0a3dbc1f6767c08f65c1287aa9653" # 유저 배려하기 위해 디폴트 값으로 태그 넣어둠
+
+      #gateway-server 도커 이미지 정보
+      gateway_tag:
+        description: "Gateway 이미지 태그(SHA)"
+        required: true
+        default: "85a4b1840fff91e4f7927b9830f6d0bdc38ef8e1" # 유저 배려하기 위해 디폴트 값으로 태그 넣어둠
 
 
 permissions:
