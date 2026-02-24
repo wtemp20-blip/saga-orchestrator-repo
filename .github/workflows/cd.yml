@@ -43,6 +43,7 @@ jobs:
           cat > deploy/env.prod << EOF
           CONFIG_TAG=${{ inputs.config_tag }}
           EUREKA_TAG=${{ inputs.eureka_tag }}
+          GATEWAY_TAG=${{ inputs.gateway_tag }}
           EOF
           echo "---- deploy/env.prod ----"
           cat deploy/env.prod
