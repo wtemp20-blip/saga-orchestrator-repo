@@ -1,146 +1,159 @@
-#----------------------------------------------------------------
-# docker-compose.prod.yml : 깃헙에서 작성하기 불편해서 여기서 작성, 운영서버에서 실행 될 docker compose yml 파일
-#----------------------------------------------------------------
-
-#----------------------------------------------------------------
-# 우리의 운영 서버에서 실행 될 docker compose yml 파일
+#------------------------------------------------
+# 우리의 운영 서버에서 실행될 docker compose yml 파일
 # 이 파일은 자동으로, 우리 운영서버로 전송되어짐
-#----------------------------------------------------------------
+#------------------------------------------------
 
 services:
 
-  #----------------------------------------------------------------
+  #----------------------------------
   # MySQL
-  #----------------------------------------------------------------
+  #----------------------------------
   mysql:
     image: mysql:8.0
     container_name: mysql
     restart: always
 
-    mem_limit: 512m # MySQL에 512MB 고정해서, 나머지 자원을 자바 애플이 사용하게 함
+    mem_limit: 512m # MySQL 에 512MB 고정해서, 나머지 자원을 자바 애플리케이션이 사용하게 함
 
-    # [교정] DEPLOY 키워드를 사용하여 메모리 제한을 설정하는 것이 최신 규격입니다.
-    deploy:
-      resources:
-        limits:
-          memory: 512m  # Mysql 컨테이너에 할당할 메모리 양을 512MB로 제한, 나머지 자원을 자바에서 사용
-
-    # 주의 !! 아래의 변수들은 도커 이미지에서 사용되는 환경 변수임 (Spring 에서 사용되는 변수 아님)
+    #주의!! 아래의 변수들은 도커 이미지에서 사용되는 환경 변수임( Spring 에서 사용되는 변수 아님)
     environment:
-      MYSQL_DATABASE: liveshop  
-      MYSQL_USER: liveshop  
-      MYSQL_PASSWORD: 1234
-      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: liveshop
+      MYSQL_USER: liveshop
+      MYSQL_PASSWORD: "1234"
+      MYSQL_ROOT_PASSWORD: "1234"
       TZ: Asia/Seoul
 
     ports:
-      - "3306:3306" # 호스트의 3306 포트를 도커 컨테이너의 3306 포트로 매핑
+      - "3306:3306"
 
     volumes:
-      - mysql_data:/var/lib/mysql # MySQL 데이터를 호스트의 mysql_data 볼륨에 영구 저장, 컨테이너와 매핑, MOUNT,  컨테이너가 삭제되어도 데이터는 유지됨???
+      - mysql_data:/var/lib/mysql
 
-    command: 
-      - --character-set-server=utf8mb4  # 이모치콘까지 지원하려면 확장된 UTF-8인 utf8mb4를 사용해야 함
+    command:
+      - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
       - --innodb-buffer-pool-size=256M
-      - --max-connections=60 
+      - --max-connections=60
 
-    healthcheck:  # 살아있나 죽어있나 확인, 운영서버에서 실행 됨
+    healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p1234"]
       interval: 5s
       timeout: 3s
       retries: 30
 
-    networks: 
-      - saga-net
+    networks: [ saga-net ]
 
-  #----------------------------------------------------------------
-  # config server : 소문자로 써야 한데..ㄷㄷ
-  #----------------------------------------------------------------
-  config-server: # @@@ 중요: 같은 도커 가상네트워크의 DNS에서 ip, host를 대신 함
-    image: ghcr.io/wtemp20-blip/saga-config:${CONFIG_TAG} # tmco)현재 깃헙의 환경변수 중 CONFIG_TAG 값을 가져와서, 그 태그의 이미지를 사용함
+
+  #------------------------------------
+  # config Server
+  #------------------------------------
+  config-server: #같은 도커 가상네트워크의 DNS에서 ip,host 를 대신함
+    image: ghcr.io/devlearncampus/saga-config:${CONFIG_TAG} #현재 깃헙의 환경변수 중 CONFIG_TAG값 가져오기
     container_name: config-server
+    ports:
+      - "8881:8881"
     restart: always
 
-    mem_limit: 320m # tmco) Config 서버는 가벼운 편이므로, 3기가중 512MB는 MYSQL에 할당하고, 320MB는 Config 서버에 할당
-
-    ports:
-      - "8881:8881" # tm) 외부 8881 -> 컨테이너 8881
+    mem_limit: 320m
 
     environment:
-      SPRING_PROFILES_ACTIVE: prod   # prod 단계야..
-      SERVER_PORT: 8881
-      # PORT: 8881  # 지정하지 않으면 8080 으로 돌아감.. (Spring Boot는 SERVER_PORT 사용)
+      - SPRING_PROFILES_ACTIVE=prod
+      - PORT=8881 #지정하지 않으면 8080 으로 돌아감..
+      - SERVER_PORT=8881
 
-      # tc) 메모리 안정화를 위한 설정 (계산에 의함)
-      # "BPL*"은 Paketo Buildpack이 JAVA_TOOL_OPTIONS 를 계산할때 참고 하는 값
-      # tmco) 컨테이너 메모리 한도 내에서 JVM 자동 튜닝에 사용됨
-      BPL_JVM_THREAD_COUNT: 25
-      BPL_JVM_STACK_SIZE: 384k
-      BPL_JVM_RESERVED_CODE_CACHE_SIZE: 48M
-      BPL_JVM_MAX_METASPACE_SIZE: 80M
+      #메모리 안정화를 위한 설정(계산에 의함)
+      # "BPL*" 은 paketo 가 JAVA_TOOL_OPTIONS 를 계산할때 참고하는 값
+      - BPL_JVM_THREAD_COUNT=25
+      - BPL_JVM_STACK_SIZE=384k
+      - BPL_JVM_RESERVED_CODE_CACHE_SIZE=48M
+      - BPL_JVM_MAX_METASPACE_SIZE=80M
 
-      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx160m -XX:MaxMetaspaceSize=80m -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=16m -Xss384k"
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx160m -XX:MaxMetaspaceSize=80m -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=16m -Xss384k
 
-    networks:
-      - saga-net  # 같은 네트웍으로 묶는다.. (tmco) MySQL과 Config 서버가 서로 통신할 수 있게)
-      
-    # [교정] mem_limit 보다는 deploy.resources.limits 방식을 권장합니다.
-    deploy:
-      resources:
-        limits:
-          memory: 320m      
+    networks: [ saga-net ]
 
-  #----------------------------------------------------------------
-  # eureka server : 소문자로 써야 한데..ㄷㄷ
-  #----------------------------------------------------------------    
-  #----------------------------------------------------------------
-  # gateway server : 소문자로 써야 한데..ㄷㄷ
-  #----------------------------------------------------------------    
-  gateway-server: # @@@ 중요: 같은 도커 가상네트워크의 DNS에서 ip, host를 대신 함
-    image: ghcr.io/wtemp20-blip/saga-gateway:${GATEWAY_TAG} # tmco)현재 깃헙의 환경변수 중 CONFIG_TAG 값을 가져와서, 그 태그의 이미지를 사용함
+
+  #------------------------------------
+  # eureka Server
+  #------------------------------------
+  eureka-server: # 도커 내부 네트워크 상에서 ip대신 다른 도커와 통신할때 사용할 유레카 서버의 DNS 명
+    image: ghcr.io/devlearncampus/saga-eureka:${EUREKA_TAG} #현재 깃헙의 환경변수 중 EUREKA_TAG값 가져오기
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    restart: always
+
+    mem_limit: 320m
+
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8881  # eureka도 config server의 클라이언트
+      - PORT=8761 #지정하지 않으면 8080 으로 돌아감..
+      - SERVER_PORT=8761
+
+      #메모리 안정화를 위한 설정(계산에 의함)
+      # "BPL*" 은 paketo 가 JAVA_TOOL_OPTIONS 를 계산할때 참고하는 값
+      - BPL_JVM_THREAD_COUNT=25
+      - BPL_JVM_STACK_SIZE=384k
+      - BPL_JVM_RESERVED_CODE_CACHE_SIZE=48M
+      - BPL_JVM_MAX_METASPACE_SIZE=80M
+
+      - JAVA_TOOL_OPTIONS=-Xms64m -Xmx160m -XX:MaxMetaspaceSize=80m -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=16m -Xss384k
+
+    depends_on:
+      - config-server
+
+    networks: [ saga-net ]
+
+
+  #------------------------------------
+  # gateway Server
+  #------------------------------------
+  gateway-server: # 도커 내부 네트워크 상에서 ip대신 다른 도커와 통신할때 사용할 유레카 서버의 DNS 명
+    image: ghcr.io/devlearncampus/saga-gateway:${GATEWAY_TAG} #현재 깃헙의 환경변수 중 GATEWAY_TAG값 가져오기
     container_name: gateway-server
     ports:
-      - "8882:8882" # tm) 외부 8881 -> 컨테이너 8881    
+      - "8882:8882"   # [치명 수정] gateway는 8882로 열어야 함
     restart: always
-  
-    mem_limit: 320m # tmco) Config 서버는 가벼운 편이므로, 3기가중 512MB는 MYSQL에 할당하고, 320MB는 Config 서버에 할당
-  
+
+    mem_limit: 320m
+
     environment:
-      - SPRING_PROFILES_ACTIVE=prod   # prod 단계야..
-      - SPRING_APPLICATION_NAME=saga-gateway
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_APPLICATION_NAME=saga-gateway # UNKNOWN 등록 방지(선택이지만 강력 권장)
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8881
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - PORT=8882  # 지정하지 않으면 8080 으로 돌아감.. 
+      - PORT=8882 #지정하지 않으면 8080 으로 돌아감..
       - SERVER_PORT=8882
-        
-      # tc) 메모리 안정화를 위한 설정 (계산에 의함)
-      # "BPL*"은 Paketo Buildpack이 JAVA_TOOL_OPTIONS 를 계산할때 참고 하는 값
-      # tmco) 컨테이너 메모리 한도 내에서 JVM 자동 튜닝에 사용됨
+
+      #메모리 안정화를 위한 설정(계산에 의함)
+      # "BPL*" 은 paketo 가 JAVA_TOOL_OPTIONS 를 계산할때 참고하는 값
       - BPL_JVM_THREAD_COUNT=60
       - BPL_JVM_STACK_SIZE=512k
       - BPL_JVM_RESERVED_CODE_CACHE_SIZE=80M
       - BPL_JVM_MAX_METASPACE_SIZE=96M
+
       - JAVA_TOOL_OPTIONS=-Xms128m -Xmx256m -XX:MaxMetaspaceSize=96m -XX:ReservedCodeCacheSize=80m -XX:MaxDirectMemorySize=32m -Xss512k
-  
+
     depends_on:
       - config-server
-      - eureka-server    
-  
-    networks:
-      - saga-net  # 같은 네트웍으로 묶는다.. (tmco) MySQL과 Config 서버가 서로 통신할 수 있게)    
-      
-  #----------------------------------------------------------------
-  # member-service server : 소문자로 써야 한데..ㄷㄷ
-  #----------------------------------------------------------------    
+      - eureka-server
 
-#----------------------------------------------------------------
-# 볼륨 & 네트워크 
-#----------------------------------------------------------------    
+    networks: [ saga-net ]
 
+
+  #------------------------------------
+  # member-service
+  #------------------------------------
+  # (추가 예정)
+
+
+#------------------------------------
+# 볼륨 & 네트워크
+#------------------------------------
 volumes:
-  mysql_data: 
+  mysql_data:
 
 networks:
   saga-net:
-    driver: bridge # 브릿지 모드
+    driver: bridge
