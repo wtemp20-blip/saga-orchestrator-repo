@@ -1,12 +1,21 @@
 name: saga CD
 
 on:
-  workflow_dispatch:
-    inputs:
+  workflow_dispatch: # 개발자가 버튼을 눌러 배포 시작 (수동 배포)
+    inputs: # 개발자가, 이미 생성된 DockerImage의 태그를 입력 할 수 있는 텍스트 박스
+
+      # config-server 도커 이미지 정보
       config_tag:
         description: "Config 이미지 태그(SHA)"
         required: true
-        default: "9bd0fdff48ad3da63cab00af1c5588a937b20276"
+        default: "9bd0fdff48ad3da63cab00af1c5588a937b20276"  # 유저 배려하기 위해 디폴트 값으로 태그 넣어 둠
+        
+      # eureka-server 도커 이미지 정보
+      eureka_tag:
+        description: "Eureka 이미지 태그(SHA)"
+        required: true
+        default: "da7ad03ee8a9f4fe4cd36af1a75e00003e0cc392"         
+        
 
 permissions:
   contents: read
@@ -27,6 +36,7 @@ jobs:
           mkdir -p deploy
           cat > deploy/env.prod << EOF
           CONFIG_TAG=${{ inputs.config_tag }}
+          EUREKA_TAG=${{ inputs.eureka_tag }}
           EOF
           echo "---- deploy/env.prod ----"
           cat deploy/env.prod
