@@ -21,7 +21,12 @@ on:
         description: "Gateway 이미지 태그(SHA)"
         required: true
         default: "85a4b1840fff91e4f7927b9830f6d0bdc38ef8e1" # 유저 배려하기 위해 디폴트 값으로 태그 넣어둠
-
+        
+      #member-service 도커 이미지 정보
+      member_tag:
+        description: "Member 이미지 태그(SHA)"
+        required: true
+        default: "@@@@ 1e4f7927b9830f6d0bdc38ef8e1" # 유저 배려하기 위해 디폴트 값으로 태그 넣어둠     
 
 permissions:
   contents: read
@@ -44,6 +49,9 @@ jobs:
           mkdir -p deploy
           cat > deploy/env.prod << 'EOF'
           CONFIG_TAG=${{ inputs.config_tag }}
+          EUREKA_TAG=${{ inputs.eureka_tag }}
+          GATEWAY_TAG=${{ inputs.gateway_tag }}
+          MEMBER_TAG=${{ inputs.member_tag }}
           EOF
           echo "---- deploy/env.prod ----"
           cat deploy/env.prod
