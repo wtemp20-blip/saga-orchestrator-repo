@@ -19,6 +19,12 @@ services:
 
     mem_limit: 512m # MySQL에 512MB 고정해서, 나머지 자원을 자바 애플이 사용하게 함
 
+    # [교정] DEPLOY 키워드를 사용하여 메모리 제한을 설정하는 것이 최신 규격입니다.
+    deploy:
+      resources:
+        limits:
+          memory: 512m  # Mysql 컨테이너에 할당할 메모리 양을 512MB로 제한, 나머지 자원을 자바에서 사용
+
     # 주의 !! 아래의 변수들은 도커 이미지에서 사용되는 환경 변수임 (Spring 에서 사용되는 변수 아님)
     environment:
       MYSQL_DATABASE: liveshop  
@@ -78,6 +84,12 @@ services:
 
     networks:
       - saga-net  # 같은 네트웍으로 묶는다.. (tmco) MySQL과 Config 서버가 서로 통신할 수 있게)
+      
+    # [교정] mem_limit 보다는 deploy.resources.limits 방식을 권장합니다.
+    deploy:
+      resources:
+        limits:
+          memory: 320m      
 
   #----------------------------------------------------------------
   # eureka server : 소문자로 써야 한데..ㄷㄷ
