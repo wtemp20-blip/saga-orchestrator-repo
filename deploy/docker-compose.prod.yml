@@ -51,7 +51,7 @@ services:
   #----------------------------------------------------------------
   # config server : 소문자로 써야 한데..ㄷㄷ
   #----------------------------------------------------------------
-  config-server:
+  config-server: # @@@ 중요: 같은 도커 가상네트워크의 DNS에서 ip, host를 대신 함
     image: ghcr.io/wtemp20-blip/saga-config:${CONFIG_TAG} # tmco)현재 깃헙의 환경변수 중 CONFIG_TAG 값을 가져와서, 그 태그의 이미지를 사용함
     container_name: config-server
     restart: always
